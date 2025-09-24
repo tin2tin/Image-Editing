@@ -1,6 +1,10 @@
 # Nano-Banana-and-Seedream-via-Pollinations
 UI for uploading image to ImgBB and process them with Nano Banana or Seedream via Pollinations.
 
+<div align="center">
+  <a href="https://tin2tin.github.io/img2img/">Open</a><br><br>
+</div>
+
 <img width="691" height="689" alt="image" src="https://github.com/user-attachments/assets/29fdb7b1-942c-45fc-bcc5-1598a7146953" />
 
 <img width="697" height="453" alt="image" src="https://github.com/user-attachments/assets/171bbd29-8718-40ad-9db5-4e081fd49cd9" />
