@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMG2IMG via Pollinations</title>
+    <title>Pollination AI Image Editing</title>
 
     <!-- CSS -->
     <style>
@@ -108,15 +108,10 @@
             background-color: rgba(0, 0, 0, 0.85);
             padding: 0; border: none;
         }
-        #result-image-wrapper:fullscreen .image-display-area {
-            max-height: 95vh; max-width: 95vw;
-        }
-        #result-image-wrapper:fullscreen #resultImage {
-            max-height: 95vh; max-width: 95vw;
-        }
+        #result-image-wrapper:fullscreen .image-display-area { max-height: 95vh; max-width: 95vw; }
+        #result-image-wrapper:fullscreen #resultImage { max-height: 95vh; max-width: 95vw; }
         #result-image-wrapper:fullscreen .image-controls {
-            justify-content: flex-end; align-items: flex-end;
-            padding: 20px;
+            justify-content: flex-end; align-items: flex-end; padding: 20px;
         }
         
         .spinner-container { display: flex; justify-content: center; align-items: center; padding: 20px; }
@@ -129,17 +124,17 @@
 </head>
 <body>
     <div class="container" id="top-container">
-        <h1>IMG2IMG via Pollinations</h1>
+        <h1>Pollination AI Image Editing</h1>
         
         <div id="credentials-section" class="credentials-section" style="display: none;">
-            <p class="credentials-info">Please provide your API key. To hide this section, edit the HTML file and fill in the <code>IMGBB_API_KEY</code> variable.</p>
-            <div class="input-group">
+            <p class="credentials-info">Please provide the required credentials below. To hide these fields, edit the script and fill in the variables.</p>
+            <div class="input-group" id="imgbb-key-group">
                 <label for="apiKeyInput">ImgBB API Key: <a href="https://imgbb.com/keys" target="_blank" class="label-link">(find here)</a></label>
                 <input type="password" id="apiKeyInput" placeholder="Enter your ImgBB API Key">
             </div>
-            <div class="input-group">
-                <label for="pollinationsTokenInput">Pollinations Token (Optional): <a href="https://pollinations.ai/" target="_blank" class="label-link">(info here)</a></label>
-                <input type="text" id="pollinationsTokenInput" placeholder="Enter Pollinations token if needed">
+            <div class="input-group" id="pollinations-token-group">
+                <label for="pollinationsTokenInput">Pollinations Token: <a href="https://pollinations.ai/" target="_blank" class="label-link">(info here)</a></label>
+                <input type="password" id="pollinationsTokenInput" placeholder="Enter Pollinations token if needed">
             </div>
         </div>
 
@@ -162,7 +157,7 @@
             <div class="input-group">
                 <label for="modelSelect">3. Select a Model:</label>
                 <select id="modelSelect">
-                    <option value="nanobanana" selected>Nanobanana (Default)</option>
+                    <option value="nanobanana" selected>Nano Banana (Gemini)</option>
                     <option value="seedream">Seedream</option>
                 </select>
             </div>
@@ -208,11 +203,16 @@
     <!-- JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- To hide the input fields, paste your credentials here ---
             const IMGBB_API_KEY = ''; 
+            const POLLINATIONS_TOKEN = '';
+            // -----------------------------------------------------------
 
             const credentialsSection = document.getElementById('credentials-section'),
                   apiKeyInput = document.getElementById('apiKeyInput'),
                   pollinationsTokenInput = document.getElementById('pollinationsTokenInput'),
+                  imgbbKeyGroup = document.getElementById('imgbb-key-group'),
+                  pollinationsTokenGroup = document.getElementById('pollinations-token-group'),
                   modelSelect = document.getElementById('modelSelect'),
                   seedreamOptions = document.getElementById('seedream-options'),
                   seedreamWidth = document.getElementById('seedreamWidth'),
@@ -229,7 +229,24 @@
 
             let selectedFile = null;
 
-            if (IMGBB_API_KEY === '') { credentialsSection.style.display = 'block'; }
+            // --- UPDATED: Initial UI Setup ---
+            let needsCredentials = false;
+            if (IMGBB_API_KEY === '') {
+                imgbbKeyGroup.style.display = 'block';
+                needsCredentials = true;
+            } else {
+                imgbbKeyGroup.style.display = 'none';
+            }
+            if (POLLINATIONS_TOKEN === '') {
+                pollinationsTokenGroup.style.display = 'block';
+                needsCredentials = true;
+            } else {
+                pollinationsTokenGroup.style.display = 'none';
+            }
+            if (needsCredentials) {
+                credentialsSection.style.display = 'block';
+            }
+            // --- End UI Setup ---
 
             processBtn.addEventListener('click', handleProcessWorkflow);
             resetBtn.addEventListener('click', resetUI);
@@ -283,8 +300,9 @@
             }
 
             async function handleProcessWorkflow() {
+                // UPDATED: Logic to get credentials
                 const apiKey = (IMGBB_API_KEY === '') ? apiKeyInput.value.trim() : IMGBB_API_KEY;
-                const pollinationsToken = pollinationsTokenInput.value.trim();
+                const pollinationsToken = (POLLINATIONS_TOKEN === '') ? pollinationsTokenInput.value.trim() : POLLINATIONS_TOKEN;
                 const selectedModel = modelSelect.value;
                 const prompt = promptInput.value.trim();
 
@@ -322,7 +340,7 @@
                 if (!resultImage.src) return;
                 logStatus('Processing output as new input...', 'info');
                 try {
-                    const response = await fetch(resultImage.src, { cache: "no-cache" }); // Use no-cache to avoid CORS issues with cached images
+                    const response = await fetch(resultImage.src, { cache: "no-cache" });
                     if (!response.ok) throw new Error('Network response for image fetch was not ok.');
                     const blob = await response.blob();
                     const newFile = new File([blob], `pollinations_${Date.now()}.png`, { type: blob.type });
@@ -330,7 +348,7 @@
                     document.getElementById('top-container').scrollIntoView();
                     logStatus('-> Ready. New image loaded as input.', 'success');
                 } catch(err) {
-                    logStatus(`ERROR: Could not use image as input. It may be due to cross-origin restrictions. Try downloading and re-uploading.`, 'error');
+                    logStatus(`ERROR: Could not use image as input. ${err.message}`, 'error');
                 }
             }
 
@@ -345,10 +363,8 @@
                 return data.data; 
             }
             
-            // --- UPDATED FUNCTION ---
             function generatePollinationsImage(prompt, temporaryImageUrl, token, model) {
                 let fullPrompt = prompt;
-                // Add the special string ONLY for nanobanana with an input image.
                 if (temporaryImageUrl && model === 'nanobanana') {
                     fullPrompt += ' in the size of the input image';
                     logStatus('-> Appending special prompt for Nano Banana model.');
